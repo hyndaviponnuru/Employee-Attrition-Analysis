@@ -3,9 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score
 
 
 # ============================================================
@@ -26,16 +25,18 @@ st.set_page_config(
 st.title("Employee Attrition Analysis & Risk Prediction")
 
 st.write(
-    "This dashboard analyzes employee attrition patterns and uses "
-    "machine learning to estimate employee attrition risk."
+    "Analyze employee attrition patterns and predict the "
+    "potential risk of employee attrition using machine learning."
 )
 
 
 # ============================================================
-# LOAD DATASET
+# LOAD DATA
 # ============================================================
 
-df = pd.read_csv("WA_Fn-UseC_-HR-Employee-Attrition.csv")
+df = pd.read_csv(
+    "WA_Fn-UseC_-HR-Employee-Attrition.csv"
+)
 
 
 # ============================================================
@@ -75,21 +76,10 @@ with col3:
 
 
 # ============================================================
-# DATASET PREVIEW
-# ============================================================
-
-st.subheader("Dataset Preview")
-
-st.dataframe(
-    df.head()
-)
-
-
-# ============================================================
 # ATTRITION BY DEPARTMENT
 # ============================================================
 
-st.subheader("Attrition by Department")
+st.header("📊 Attrition by Department")
 
 dept_attrition = (
     df[df["Attrition"] == "Yes"]["Department"]
@@ -103,12 +93,9 @@ dept_attrition.plot(
     ax=ax
 )
 
-ax.set_title(
-    "Employees Who Left by Department"
-)
-
 ax.set_xlabel("Department")
-ax.set_ylabel("Number of Employees")
+ax.set_ylabel("Employees Left")
+ax.set_title("Employees Who Left by Department")
 
 ax.tick_params(
     axis="x",
@@ -122,27 +109,28 @@ st.pyplot(fig)
 # FACTORS ASSOCIATED WITH ATTRITION
 # ============================================================
 
-st.subheader("Factors Associated with Attrition")
+st.header("🔎 Factors Associated with Attrition")
 
 st.info(
-    "These charts show factors associated with attrition. "
-    "They should not be interpreted as proven reasons why an "
-    "individual employee left."
+    "These factors show patterns associated with employee "
+    "attrition. They should not be interpreted as proven "
+    "reasons why an individual employee left."
 )
 
-left_df = df[df["Attrition"] == "Yes"]
+left_df = df[
+    df["Attrition"] == "Yes"
+]
 
 
-reason_col1, reason_col2 = st.columns(2)
-
-
-# -----------------------------
+# ============================================================
 # OVERTIME
-# -----------------------------
+# ============================================================
 
-with reason_col1:
+col1, col2 = st.columns(2)
 
-    st.markdown("### OverTime")
+with col1:
+
+    st.subheader("OverTime")
 
     overtime_counts = (
         left_df["OverTime"]
@@ -169,17 +157,17 @@ with reason_col1:
     st.pyplot(fig1)
 
 
-# -----------------------------
+# ============================================================
 # JOB SATISFACTION
-# -----------------------------
+# ============================================================
 
-with reason_col2:
+with col2:
 
-    st.markdown(
-        "### Job Satisfaction Level (1=Low, 4=High)"
+    st.subheader(
+        "Job Satisfaction"
     )
 
-    js_counts = (
+    satisfaction_counts = (
         left_df["JobSatisfaction"]
         .value_counts()
         .sort_index()
@@ -189,13 +177,18 @@ with reason_col2:
         figsize=(5, 3.5)
     )
 
-    js_counts.plot(
+    satisfaction_counts.plot(
         kind="bar",
         ax=ax2
     )
 
-    ax2.set_xlabel("Job Satisfaction")
-    ax2.set_ylabel("Employees Left")
+    ax2.set_xlabel(
+        "Satisfaction Level"
+    )
+
+    ax2.set_ylabel(
+        "Employees Left"
+    )
 
     ax2.tick_params(
         axis="x",
@@ -205,188 +198,96 @@ with reason_col2:
     st.pyplot(fig2)
 
 
-# -----------------------------
-# WORK LIFE BALANCE
-# -----------------------------
-
-reason_col3, reason_col4 = st.columns(2)
-
-
-with reason_col3:
-
-    st.markdown(
-        "### Work-Life Balance (1=Bad, 4=Best)"
-    )
-
-    wlb_counts = (
-        left_df["WorkLifeBalance"]
-        .value_counts()
-        .sort_index()
-    )
-
-    fig3, ax3 = plt.subplots(
-        figsize=(5, 3.5)
-    )
-
-    wlb_counts.plot(
-        kind="bar",
-        ax=ax3
-    )
-
-    ax3.set_xlabel("Work-Life Balance")
-    ax3.set_ylabel("Employees Left")
-
-    ax3.tick_params(
-        axis="x",
-        rotation=0
-    )
-
-    st.pyplot(fig3)
-
-
-# -----------------------------
-# YEARS AT COMPANY
-# -----------------------------
-
-with reason_col4:
-
-    st.markdown(
-        "### Average Years at Company"
-    )
-
-    avg_years = (
-        df.groupby("Attrition")["YearsAtCompany"]
-        .mean()
-    )
-
-    fig4, ax4 = plt.subplots(
-        figsize=(5, 3.5)
-    )
-
-    avg_years.plot(
-        kind="bar",
-        ax=ax4
-    )
-
-    ax4.set_xlabel("Attrition")
-    ax4.set_ylabel("Average Years")
-
-    ax4.tick_params(
-        axis="x",
-        rotation=0
-    )
-
-    st.pyplot(fig4)
-
-
 # ============================================================
-# ATTRITION BY AGE GROUP
+# WORK-LIFE BALANCE
 # ============================================================
 
-st.subheader("Attrition by Age Group")
-
-bins = [18, 25, 35, 45, 55, 65]
-
-labels = [
-    "18-25",
-    "26-35",
-    "36-45",
-    "46-55",
-    "56-65"
-]
-
-df["AgeGroup"] = pd.cut(
-    df["Age"],
-    bins=bins,
-    labels=labels,
-    right=True,
-    include_lowest=True
+st.subheader(
+    "Work-Life Balance"
 )
 
-age_group_attrition = (
-    df[df["Attrition"] == "Yes"]["AgeGroup"]
+balance_counts = (
+    left_df["WorkLifeBalance"]
     .value_counts()
     .sort_index()
 )
 
-fig5, ax5 = plt.subplots(
+fig3, ax3 = plt.subplots(
     figsize=(7, 4)
 )
 
-age_group_attrition.plot(
+balance_counts.plot(
     kind="bar",
-    ax=ax5
+    ax=ax3
 )
 
-ax5.set_title(
-    "Employees Who Left by Age Group"
+ax3.set_xlabel(
+    "Work-Life Balance Level"
 )
 
-ax5.set_xlabel("Age Group")
-ax5.set_ylabel("Number of Employees")
+ax3.set_ylabel(
+    "Employees Left"
+)
 
-ax5.tick_params(
+ax3.tick_params(
     axis="x",
     rotation=0
 )
 
-st.pyplot(fig5)
+st.pyplot(fig3)
 
 
 # ============================================================
-# MACHINE LEARNING MODEL
+# MACHINE LEARNING
 # ============================================================
 
-st.header("🤖 Employee Attrition Risk Prediction")
+st.header(
+    "🤖 Employee Attrition Risk Prediction"
+)
 
 st.write(
     "A Random Forest classification model is trained using "
-    "historical employee data to estimate the probability "
+    "historical employee data to predict the probability "
     "of employee attrition."
 )
 
 
 # ============================================================
-# PREPARE DATA FOR MACHINE LEARNING
+# PREPARE DATA
 # ============================================================
 
 ml_df = df.copy()
 
 
-# Remove columns that are not useful for prediction
+# Columns that should not be used
 
 columns_to_drop = [
     "Attrition",
     "EmployeeNumber",
     "EmployeeCount",
     "Over18",
-    "StandardHours",
-    "AgeGroup"
+    "StandardHours"
 ]
+
 
 X = ml_df.drop(
     columns=columns_to_drop
 )
 
-y = ml_df["Attrition"]
+y = ml_df["Attrition"].map({
+    "No": 0,
+    "Yes": 1
+})
 
 
 # ============================================================
-# ENCODE CATEGORICAL VARIABLES
+# ENCODE CATEGORICAL FEATURES
 # ============================================================
 
 X = pd.get_dummies(
     X,
     drop_first=True
 )
-
-
-# Convert target
-
-y = y.map({
-    "No": 0,
-    "Yes": 1
-})
 
 
 # ============================================================
@@ -403,7 +304,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 # ============================================================
-# RANDOM FOREST MODEL
+# RANDOM FOREST
 # ============================================================
 
 model = RandomForestClassifier(
@@ -419,10 +320,12 @@ model.fit(
 
 
 # ============================================================
-# MODEL EVALUATION
+# MODEL PERFORMANCE
 # ============================================================
 
-y_pred = model.predict(X_test)
+y_pred = model.predict(
+    X_test
+)
 
 accuracy = accuracy_score(
     y_test,
@@ -430,17 +333,13 @@ accuracy = accuracy_score(
 )
 
 
-st.subheader("Model Performance")
+st.subheader(
+    "Model Performance"
+)
 
 st.metric(
     "Model Accuracy",
     f"{accuracy * 100:.2f}%"
-)
-
-st.caption(
-    "Accuracy is measured on the held-out test dataset. "
-    "For attrition prediction, precision, recall and class balance "
-    "should also be considered rather than relying only on accuracy."
 )
 
 
@@ -449,16 +348,16 @@ st.caption(
 # ============================================================
 
 st.subheader(
-    "Important Factors Used by the Model"
+    "Top Attrition Risk Factors"
 )
 
-feature_importance = pd.DataFrame({
+importance_df = pd.DataFrame({
     "Feature": X.columns,
     "Importance": model.feature_importances_
 })
 
-feature_importance = (
-    feature_importance
+importance_df = (
+    importance_df
     .sort_values(
         "Importance",
         ascending=False
@@ -467,55 +366,57 @@ feature_importance = (
 )
 
 
-fig6, ax6 = plt.subplots(
+fig4, ax4 = plt.subplots(
     figsize=(8, 5)
 )
 
-feature_importance.sort_values(
+importance_df.sort_values(
     "Importance"
 ).plot(
     kind="barh",
     x="Feature",
     y="Importance",
-    ax=ax6,
+    ax=ax4,
     legend=False
 )
 
-ax6.set_title(
-    "Top 10 Factors Influencing Model Predictions"
-)
-
-ax6.set_xlabel(
+ax4.set_xlabel(
     "Importance"
 )
 
-ax6.set_ylabel(
+ax4.set_ylabel(
     "Feature"
 )
 
-st.pyplot(fig6)
+ax4.set_title(
+    "Top 10 Factors Used by the Model"
+)
+
+st.pyplot(fig4)
 
 
 # ============================================================
-# INTERACTIVE EMPLOYEE RISK PREDICTOR
+# INTERACTIVE RISK PREDICTOR
 # ============================================================
 
-st.header("🔍 Interactive Employee Risk Predictor")
+st.header(
+    "🔍 Employee Risk Predictor"
+)
 
 st.write(
-    "Enter employee information below to estimate the "
-    "employee's probability of attrition."
+    "Enter employee information to estimate their "
+    "potential attrition risk."
 )
 
 
+col1, col2, col3 = st.columns(3)
+
+
 # ============================================================
-# INPUT SECTION
+# EMPLOYEE INPUTS
 # ============================================================
 
-input_col1, input_col2, input_col3 = st.columns(3)
-
-
-with input_col1:
+with col1:
 
     age = st.number_input(
         "Age",
@@ -546,7 +447,7 @@ with input_col1:
     )
 
 
-with input_col2:
+with col2:
 
     overtime = st.selectbox(
         "OverTime",
@@ -572,7 +473,7 @@ with input_col2:
     )
 
 
-with input_col3:
+with col3:
 
     job_level = st.number_input(
         "Job Level",
@@ -587,14 +488,14 @@ with input_col3:
         index=2
     )
 
-    years_since_last_promotion = st.number_input(
+    years_since_promotion = st.number_input(
         "Years Since Last Promotion",
         min_value=0,
         max_value=15,
         value=1
     )
 
-    num_companies_worked = st.number_input(
+    companies_worked = st.number_input(
         "Number of Companies Worked",
         min_value=0,
         max_value=10,
@@ -603,7 +504,7 @@ with input_col3:
 
 
 # ============================================================
-# PREDICTION BUTTON
+# PREDICTION
 # ============================================================
 
 if st.button(
@@ -611,18 +512,15 @@ if st.button(
     type="primary"
 ):
 
-    # Create empty dataframe
+    # Create input dataframe
     input_data = pd.DataFrame(
+        0,
+        index=[0],
         columns=X.columns
     )
 
-    # Create one row filled with zero
-    input_data.loc[0] = 0
 
-
-    # --------------------------------------------------------
-    # NUMERICAL FEATURES
-    # --------------------------------------------------------
+    # Numerical features
 
     numerical_values = {
 
@@ -632,24 +530,28 @@ if st.button(
 
         "YearsAtCompany": years_at_company,
 
-        "TotalWorkingYears": total_working_years,
+        "TotalWorkingYears":
+            total_working_years,
 
         "JobLevel": job_level,
 
-        "JobInvolvement": job_involvement,
+        "JobInvolvement":
+            job_involvement,
 
-        "JobSatisfaction": job_satisfaction,
+        "JobSatisfaction":
+            job_satisfaction,
 
-        "WorkLifeBalance": work_life_balance,
+        "WorkLifeBalance":
+            work_life_balance,
 
         "EnvironmentSatisfaction":
             environment_satisfaction,
 
         "YearsSinceLastPromotion":
-            years_since_last_promotion,
+            years_since_promotion,
 
         "NumCompaniesWorked":
-            num_companies_worked
+            companies_worked
     }
 
 
@@ -657,40 +559,36 @@ if st.button(
 
         if feature in input_data.columns:
 
-            input_data.loc[0, feature] = value
-
-
-    # --------------------------------------------------------
-    # OVERTIME
-    # --------------------------------------------------------
-
-    overtime_column = "OverTime_Yes"
-
-    if overtime_column in input_data.columns:
-
-        if overtime == "Yes":
-
             input_data.loc[
                 0,
-                overtime_column
-            ] = 1
+                feature
+            ] = value
 
 
-    # --------------------------------------------------------
-    # PREDICTION
-    # --------------------------------------------------------
+    # Overtime
+
+    if (
+        overtime == "Yes"
+        and "OverTime_Yes" in input_data.columns
+    ):
+
+        input_data.loc[
+            0,
+            "OverTime_Yes"
+        ] = 1
+
+
+    # ========================================================
+    # PREDICT PROBABILITY
+    # ========================================================
 
     probability = model.predict_proba(
         input_data
     )[0][1]
 
-
-    prediction = model.predict(
-        input_data
-    )[0]
-
-
-    probability_percent = probability * 100
+    probability_percent = (
+        probability * 100
+    )
 
 
     # ========================================================
@@ -705,48 +603,27 @@ if st.button(
     if probability >= 0.70:
 
         st.error(
-            f"🔴 HIGH ATTRITION RISK — "
+            f"🔴 HIGH RISK — "
             f"{probability_percent:.2f}%"
         )
-
-        st.write(
-            "This employee has a relatively high predicted "
-            "probability of attrition based on the trained model."
-        )
-
 
     elif probability >= 0.40:
 
         st.warning(
-            f"🟠 MEDIUM ATTRITION RISK — "
+            f"🟠 MEDIUM RISK — "
             f"{probability_percent:.2f}%"
         )
-
-        st.write(
-            "This employee has a moderate predicted "
-            "probability of attrition."
-        )
-
 
     else:
 
         st.success(
-            f"🟢 LOW ATTRITION RISK — "
+            f"🟢 LOW RISK — "
             f"{probability_percent:.2f}%"
         )
 
-        st.write(
-            "This employee has a relatively low predicted "
-            "probability of attrition."
-        )
-
-
-    # --------------------------------------------------------
-    # PROBABILITY METRIC
-    # --------------------------------------------------------
 
     st.metric(
-        "Predicted Probability of Leaving",
+        "Probability of Attrition",
         f"{probability_percent:.2f}%"
     )
 
