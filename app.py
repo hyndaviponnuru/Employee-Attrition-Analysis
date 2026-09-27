@@ -16,7 +16,7 @@ from sklearn.metrics import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Employee Attrition Analysis & Risk Prediction",
+    page_title="Employee Attrition Analysis",
     page_icon="📊",
     layout="wide"
 )
