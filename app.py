@@ -1,14 +1,9 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix
-)
+from sklearn.metrics import accuracy_score
 
 
 # ============================================================
@@ -39,9 +34,61 @@ st.write(
 # LOAD DATASET
 # ============================================================
 
-df = pd.read_csv(
-    "WA_Fn-UseC_-HR-Employee-Attrition.csv"
-)
+try:
+
+    df = pd.read_csv(
+        "IBM_HR_Attrition_Dataset.csv"
+    )
+
+except FileNotFoundError:
+
+    st.error(
+        "IBM_HR_Attrition_Dataset.csv was not found. "
+        "Please make sure the CSV file is in the same folder "
+        "as this Python file."
+    )
+
+    st.stop()
+
+
+# ============================================================
+# CHECK REQUIRED COLUMNS
+# ============================================================
+
+required_columns = [
+    "EmployeeID",
+    "Attrition",
+    "Age",
+    "MonthlyIncome",
+    "OverTime",
+    "JobSatisfaction",
+    "WorkLifeBalance",
+    "EnvironmentSatisfaction",
+    "JobLevel",
+    "JobInvolvement",
+    "YearsAtCompany",
+    "YearsSinceLastPromotion",
+    "NumCompaniesWorked",
+    "Department",
+    "JobRole"
+]
+
+missing_columns = [
+    column
+    for column in required_columns
+    if column not in df.columns
+]
+
+if missing_columns:
+
+    st.error(
+        "The following required columns are missing from "
+        "IBM_HR_Attrition_Dataset.csv:"
+    )
+
+    st.write(missing_columns)
+
+    st.stop()
 
 
 # ============================================================
@@ -61,19 +108,25 @@ attrition_rate = (
 
 col1, col2, col3 = st.columns(3)
 
+
 with col1:
+
     st.metric(
         "Total Employees",
         total_employees
     )
 
+
 with col2:
+
     st.metric(
         "Employees Left",
         employees_left
     )
 
+
 with col3:
+
     st.metric(
         "Attrition Rate",
         f"{attrition_rate:.2f}%"
@@ -81,61 +134,28 @@ with col3:
 
 
 # ============================================================
-# DEPARTMENT ATTRITION
+# ATTRITION ANALYSIS
 # ============================================================
 
-st.header("📊 Attrition by Department")
+st.header("Attrition Analysis")
 
-dept_attrition = (
-    df[df["Attrition"] == "Yes"]["Department"]
-    .value_counts()
+st.write(
+    "The following charts show the relationship between "
+    "selected employee factors and employees who left the organization."
 )
 
-fig, ax = plt.subplots(figsize=(7, 4))
-
-dept_attrition.plot(
-    kind="bar",
-    ax=ax
-)
-
-ax.set_title(
-    "Employees Who Left by Department"
-)
-
-ax.set_xlabel("Department")
-ax.set_ylabel("Employees Left")
-
-ax.tick_params(
-    axis="x",
-    rotation=0
-)
-
-st.pyplot(fig)
-
-
-# ============================================================
-# FACTORS ASSOCIATED WITH ATTRITION
-# ============================================================
-
-st.header("🔎 Factors Associated with Attrition")
-
-st.info(
-    "These charts show factors associated with attrition. "
-    "They do not prove that a specific factor caused an employee "
-    "to leave."
-)
 
 left_df = df[
     df["Attrition"] == "Yes"
 ]
 
 
+# ============================================================
+# OVERTIME BAR CHART
+# ============================================================
+
 col1, col2 = st.columns(2)
 
-
-# ------------------------------------------------------------
-# OVERTIME
-# ------------------------------------------------------------
 
 with col1:
 
@@ -155,8 +175,17 @@ with col1:
         ax=ax1
     )
 
-    ax1.set_xlabel("OverTime")
-    ax1.set_ylabel("Employees Left")
+    ax1.set_title(
+        "Employees Who Left by OverTime"
+    )
+
+    ax1.set_xlabel(
+        "OverTime"
+    )
+
+    ax1.set_ylabel(
+        "Employees Left"
+    )
 
     ax1.tick_params(
         axis="x",
@@ -165,10 +194,12 @@ with col1:
 
     st.pyplot(fig1)
 
+    plt.close(fig1)
 
-# ------------------------------------------------------------
-# JOB SATISFACTION
-# ------------------------------------------------------------
+
+# ============================================================
+# JOB SATISFACTION BAR CHART
+# ============================================================
 
 with col2:
 
@@ -189,8 +220,12 @@ with col2:
         ax=ax2
     )
 
+    ax2.set_title(
+        "Employees Who Left by Job Satisfaction"
+    )
+
     ax2.set_xlabel(
-        "Satisfaction Level"
+        "Job Satisfaction Level"
     )
 
     ax2.set_ylabel(
@@ -204,49 +239,14 @@ with col2:
 
     st.pyplot(fig2)
 
-
-# ------------------------------------------------------------
-# WORK LIFE BALANCE
-# ------------------------------------------------------------
-
-st.subheader("Work-Life Balance")
-
-balance_counts = (
-    left_df["WorkLifeBalance"]
-    .value_counts()
-    .sort_index()
-)
-
-fig3, ax3 = plt.subplots(
-    figsize=(7, 4)
-)
-
-balance_counts.plot(
-    kind="bar",
-    ax=ax3
-)
-
-ax3.set_xlabel(
-    "Work-Life Balance Level"
-)
-
-ax3.set_ylabel(
-    "Employees Left"
-)
-
-ax3.tick_params(
-    axis="x",
-    rotation=0
-)
-
-st.pyplot(fig3)
+    plt.close(fig2)
 
 
 # ============================================================
 # MACHINE LEARNING SECTION
 # ============================================================
 
-st.header("🤖 Employee Attrition Risk Prediction")
+st.header("Employee Attrition Risk Prediction")
 
 
 # ============================================================
@@ -283,9 +283,13 @@ ml_df = df[
 # SEPARATE INPUT AND TARGET
 # ============================================================
 
-X = ml_df[features]
+X = ml_df[
+    features
+]
 
-y = ml_df["Attrition"].map({
+y = ml_df[
+    "Attrition"
+].map({
     "No": 0,
     "Yes": 1
 })
@@ -331,6 +335,10 @@ model = RandomForestClassifier(
 )
 
 
+# ============================================================
+# TRAIN MODEL
+# ============================================================
+
 model.fit(
     X_train,
     y_train
@@ -345,11 +353,16 @@ y_pred = model.predict(
     X_test
 )
 
+
 accuracy = accuracy_score(
     y_test,
     y_pred
 )
 
+
+# ============================================================
+# MODEL PERFORMANCE
+# ============================================================
 
 st.subheader("Model Performance")
 
@@ -360,177 +373,25 @@ st.metric(
 
 
 # ============================================================
-# FEATURE IMPORTANCE
+# EMPLOYEE ID BASED RISK PREDICTOR
 # ============================================================
 
-st.subheader(
-    "Top Factors Used by the Model"
-)
-
-importance_df = pd.DataFrame({
-    "Feature": X_encoded.columns,
-    "Importance": model.feature_importances_
-})
-
-
-importance_df = (
-    importance_df
-    .sort_values(
-        "Importance",
-        ascending=False
-    )
-    .head(10)
-)
-
-
-fig4, ax4 = plt.subplots(
-    figsize=(8, 5)
-)
-
-importance_df.sort_values(
-    "Importance"
-).plot(
-    kind="barh",
-    x="Feature",
-    y="Importance",
-    ax=ax4,
-    legend=False
-)
-
-ax4.set_title(
-    "Top 10 Attrition Risk Factors"
-)
-
-ax4.set_xlabel(
-    "Importance"
-)
-
-ax4.set_ylabel(
-    "Feature"
-)
-
-st.pyplot(fig4)
-
-
-# ============================================================
-# INTERACTIVE EMPLOYEE RISK PREDICTOR
-# ============================================================
-
-st.header("🔍 Interactive Employee Risk Predictor")
+st.header("Employee Risk Predictor")
 
 st.write(
-    "Enter the employee's information below. "
-    "The trained Random Forest model will estimate "
-    "the probability of attrition."
+    "Enter an Employee ID from the dataset to automatically "
+    "analyze the employee and estimate their attrition risk."
 )
 
 
 # ============================================================
-# INPUT FIELDS
+# EMPLOYEE ID INPUT
 # ============================================================
 
-col1, col2, col3 = st.columns(3)
-
-
-# ------------------------------------------------------------
-# COLUMN 1
-# ------------------------------------------------------------
-
-with col1:
-
-    age = st.number_input(
-        "Age",
-        min_value=18,
-        max_value=65,
-        value=30
-    )
-
-    monthly_income = st.number_input(
-        "Monthly Income",
-        min_value=1000,
-        max_value=50000,
-        value=5000
-    )
-
-    years_at_company = st.number_input(
-        "Years at Company",
-        min_value=0,
-        max_value=40,
-        value=3
-    )
-
-    years_since_promotion = st.number_input(
-        "Years Since Last Promotion",
-        min_value=0,
-        max_value=15,
-        value=1
-    )
-
-
-# ------------------------------------------------------------
-# COLUMN 2
-# ------------------------------------------------------------
-
-with col2:
-
-    overtime = st.selectbox(
-        "OverTime",
-        ["Yes", "No"]
-    )
-
-    job_satisfaction = st.selectbox(
-        "Job Satisfaction",
-        [1, 2, 3, 4],
-        index=2
-    )
-
-    work_life_balance = st.selectbox(
-        "Work-Life Balance",
-        [1, 2, 3, 4],
-        index=2
-    )
-
-    environment_satisfaction = st.selectbox(
-        "Environment Satisfaction",
-        [1, 2, 3, 4],
-        index=2
-    )
-
-
-# ------------------------------------------------------------
-# COLUMN 3
-# ------------------------------------------------------------
-
-with col3:
-
-    job_level = st.selectbox(
-        "Job Level",
-        [1, 2, 3, 4, 5],
-        index=1
-    )
-
-    job_involvement = st.selectbox(
-        "Job Involvement",
-        [1, 2, 3, 4],
-        index=2
-    )
-
-    num_companies_worked = st.number_input(
-        "Number of Companies Worked",
-        min_value=0,
-        max_value=10,
-        value=1
-    )
-
-    department = st.selectbox(
-        "Department",
-        sorted(df["Department"].unique())
-    )
-
-    job_role = st.selectbox(
-        "Job Role",
-        sorted(df["JobRole"].unique())
-    )
+employee_id = st.text_input(
+    "Enter Employee ID",
+    placeholder="Example: 1001"
+)
 
 
 # ============================================================
@@ -543,160 +404,271 @@ if st.button(
 ):
 
     # --------------------------------------------------------
-    # CREATE EMPLOYEE DATAFRAME
+    # CHECK EMPTY ID
     # --------------------------------------------------------
 
-    employee = pd.DataFrame({
-        "Age": [age],
-        "MonthlyIncome": [monthly_income],
-        "OverTime": [overtime],
-        "JobSatisfaction": [job_satisfaction],
-        "WorkLifeBalance": [work_life_balance],
-        "EnvironmentSatisfaction": [
-            environment_satisfaction
-        ],
-        "JobLevel": [job_level],
-        "JobInvolvement": [job_involvement],
-        "YearsAtCompany": [years_at_company],
-        "YearsSinceLastPromotion": [
-            years_since_promotion
-        ],
-        "NumCompaniesWorked": [
-            num_companies_worked
-        ],
-        "Department": [department],
-        "JobRole": [job_role]
-    })
-
-
-    # --------------------------------------------------------
-    # ENCODE EMPLOYEE DATA
-    # --------------------------------------------------------
-
-    employee_encoded = pd.get_dummies(
-        employee,
-        columns=[
-            "OverTime",
-            "Department",
-            "JobRole"
-        ],
-        drop_first=True
-    )
-
-
-    # --------------------------------------------------------
-    # MATCH TRAINING COLUMNS
-    # --------------------------------------------------------
-
-    employee_encoded = employee_encoded.reindex(
-        columns=X_encoded.columns,
-        fill_value=0
-    )
-
-
-    # --------------------------------------------------------
-    # GET ATTRITION PROBABILITY
-    # --------------------------------------------------------
-
-    probability = model.predict_proba(
-        employee_encoded
-    )[0][1]
-
-
-    probability_percent = (
-        probability * 100
-    )
-
-
-    # ========================================================
-    # RISK CLASSIFICATION
-    # ========================================================
-
-    if probability >= 0.70:
-
-        risk_level = "HIGH"
-
-    elif probability >= 0.40:
-
-        risk_level = "MEDIUM"
-
-    else:
-
-        risk_level = "LOW"
-
-
-    # ========================================================
-    # DISPLAY RESULT
-    # ========================================================
-
-    st.subheader(
-        "Employee Attrition Risk"
-    )
-
-
-    if risk_level == "HIGH":
-
-        st.error(
-            f"🔴 HIGH ATTRITION RISK\n\n"
-            f"Probability of Attrition: "
-            f"{probability_percent:.2f}%"
-        )
-
-        st.write(
-            "This employee profile has a relatively "
-            "high predicted probability of attrition "
-            "according to the trained model."
-        )
-
-
-    elif risk_level == "MEDIUM":
+    if employee_id.strip() == "":
 
         st.warning(
-            f"🟠 MEDIUM ATTRITION RISK\n\n"
-            f"Probability of Attrition: "
-            f"{probability_percent:.2f}%"
-        )
-
-        st.write(
-            "This employee profile has a moderate "
-            "predicted probability of attrition."
+            "Please enter an Employee ID."
         )
 
 
     else:
 
-        st.success(
-            f"🟢 LOW ATTRITION RISK\n\n"
-            f"Probability of Attrition: "
-            f"{probability_percent:.2f}%"
-        )
+        # ----------------------------------------------------
+        # FIND EMPLOYEE
+        # ----------------------------------------------------
 
-        st.write(
-            "This employee profile has a relatively "
-            "low predicted probability of attrition."
-        )
+        employee_data = df[
+            df["EmployeeID"].astype(str).str.strip()
+            == employee_id.strip()
+        ]
 
 
-    # ========================================================
-    # PROBABILITY
-    # ========================================================
+        # ----------------------------------------------------
+        # EMPLOYEE NOT FOUND
+        # ----------------------------------------------------
 
-    st.metric(
-        "Predicted Attrition Probability",
-        f"{probability_percent:.2f}%"
-    )
+        if employee_data.empty:
+
+            st.error(
+                f"Employee ID {employee_id} was not found "
+                "in the dataset."
+            )
+
+            st.info(
+                "Please enter a valid Employee ID from "
+                "IBM_HR_Attrition_Dataset.csv."
+            )
 
 
-    # ========================================================
-    # INTERPRETATION
-    # ========================================================
+        # ----------------------------------------------------
+        # EMPLOYEE FOUND
+        # ----------------------------------------------------
 
-    st.info(
-        "The prediction is a statistical estimate based on "
-        "patterns learned from historical HR data. It should "
-        "be used as a decision-support signal and not as a "
-        "definitive judgment about an individual employee."
-    )
+        else:
+
+            employee = employee_data.iloc[[0]]
+
+
+            # =================================================
+            # DISPLAY EMPLOYEE DETAILS
+            # =================================================
+
+            st.subheader("Employee Details")
+
+
+            col1, col2, col3 = st.columns(3)
+
+
+            with col1:
+
+                st.write(
+                    f"**Employee ID:** "
+                    f"{employee['EmployeeID'].iloc[0]}"
+                )
+
+                st.write(
+                    f"**Age:** "
+                    f"{employee['Age'].iloc[0]}"
+                )
+
+                st.write(
+                    f"**Monthly Income:** "
+                    f"{employee['MonthlyIncome'].iloc[0]}"
+                )
+
+
+            with col2:
+
+                st.write(
+                    f"**OverTime:** "
+                    f"{employee['OverTime'].iloc[0]}"
+                )
+
+                st.write(
+                    f"**Job Satisfaction:** "
+                    f"{employee['JobSatisfaction'].iloc[0]}"
+                )
+
+                st.write(
+                    f"**Work-Life Balance:** "
+                    f"{employee['WorkLifeBalance'].iloc[0]}"
+                )
+
+
+            with col3:
+
+                st.write(
+                    f"**Department:** "
+                    f"{employee['Department'].iloc[0]}"
+                )
+
+                st.write(
+                    f"**Job Role:** "
+                    f"{employee['JobRole'].iloc[0]}"
+                )
+
+                st.write(
+                    f"**Years at Company:** "
+                    f"{employee['YearsAtCompany'].iloc[0]}"
+                )
+
+
+            # =================================================
+            # PREPARE EMPLOYEE DATA FOR MODEL
+            # =================================================
+
+            employee_features = employee[
+                features
+            ].copy()
+
+
+            # =================================================
+            # ENCODE EMPLOYEE DATA
+            # =================================================
+
+            employee_encoded = pd.get_dummies(
+                employee_features,
+                columns=[
+                    "OverTime",
+                    "Department",
+                    "JobRole"
+                ],
+                drop_first=True
+            )
+
+
+            # =================================================
+            # MATCH TRAINING COLUMNS
+            # =================================================
+
+            employee_encoded = employee_encoded.reindex(
+                columns=X_encoded.columns,
+                fill_value=0
+            )
+
+
+            # =================================================
+            # PREDICT ATTRITION PROBABILITY
+            # =================================================
+
+            probability = model.predict_proba(
+                employee_encoded
+            )[0][1]
+
+
+            probability_percent = (
+                probability * 100
+            )
+
+
+            # =================================================
+            # RISK CLASSIFICATION
+            # =================================================
+
+            if probability >= 0.70:
+
+                risk_level = "HIGH"
+
+            elif probability >= 0.40:
+
+                risk_level = "MEDIUM"
+
+            else:
+
+                risk_level = "LOW"
+
+
+            # =================================================
+            # DISPLAY RISK RESULT
+            # =================================================
+
+            st.subheader(
+                "Employee Attrition Risk"
+            )
+
+
+            if risk_level == "HIGH":
+
+                st.error(
+                    f"HIGH ATTRITION RISK\n\n"
+                    f"Probability of Attrition: "
+                    f"{probability_percent:.2f}%"
+                )
+
+
+            elif risk_level == "MEDIUM":
+
+                st.warning(
+                    f"MEDIUM ATTRITION RISK\n\n"
+                    f"Probability of Attrition: "
+                    f"{probability_percent:.2f}%"
+                )
+
+
+            else:
+
+                st.success(
+                    f"LOW ATTRITION RISK\n\n"
+                    f"Probability of Attrition: "
+                    f"{probability_percent:.2f}%"
+                )
+
+
+            # =================================================
+            # PROBABILITY METRIC
+            # =================================================
+
+            st.metric(
+                "Predicted Attrition Probability",
+                f"{probability_percent:.2f}%"
+            )
+
+
+            # =================================================
+            # RISK INTERPRETATION
+            # =================================================
+
+            if risk_level == "HIGH":
+
+                st.write(
+                    "This employee profile has a relatively "
+                    "high predicted probability of attrition "
+                    "according to the trained Random Forest model."
+                )
+
+
+            elif risk_level == "MEDIUM":
+
+                st.write(
+                    "This employee profile has a moderate "
+                    "predicted probability of attrition "
+                    "according to the trained Random Forest model."
+                )
+
+
+            else:
+
+                st.write(
+                    "This employee profile has a relatively "
+                    "low predicted probability of attrition "
+                    "according to the trained Random Forest model."
+                )
+
+
+            # =================================================
+            # IMPORTANT NOTE
+            # =================================================
+
+            st.info(
+                "The prediction is a statistical estimate based "
+                "on patterns learned from historical HR data. "
+                "It should be used as a decision-support signal "
+                "and not as a definitive judgment about an "
+                "individual employee."
+            )
 
 
 # ============================================================
